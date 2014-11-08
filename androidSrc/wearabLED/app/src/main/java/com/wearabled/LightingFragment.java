@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
-public class ConfigurationSectionFragment extends Fragment {
+public class LightingFragment extends Fragment {
 
     public static final String CONFIG_FILE = "GrillThermConf";
     Button mConnectButton = null;
@@ -40,7 +40,7 @@ public class ConfigurationSectionFragment extends Fragment {
     Handler mHandler = null;
     View rootView = null;
     ProgressBar mConfigProgress = null;
-    public ConfigurationSectionFragment() {
+    public LightingFragment() {
 
     }
 
@@ -48,7 +48,7 @@ public class ConfigurationSectionFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(
-                R.layout.fragment_wearabled_config, container, false);
+                R.layout.fragment_lighting, container, false);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mDevicesByName = new HashMap<String, BluetoothDevice>();
         mStatusText = (TextView) rootView.findViewById(R.id.statusTextView);
