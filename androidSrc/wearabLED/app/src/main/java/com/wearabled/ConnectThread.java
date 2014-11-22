@@ -46,9 +46,6 @@ public class ConnectThread extends Thread {
         try {
             mmSocket.connect();
         } catch (IOException connectException) {
-            mHandler.obtainMessage(
-                    0,
-                    mContext.getString(R.string.ConnectionError)).sendToTarget();
             Log.d("ConnectionHandler", connectException.toString());
             try {
                 mmSocket.close();

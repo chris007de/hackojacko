@@ -132,13 +132,7 @@ public class wearabLED extends FragmentActivity implements
             {
                 Fragment fragment = new LightingFragment();
                 return fragment;
-            }/*
-            else
-            {
-                Fragment fragment = new TimerSectionFragment();
-                return fragment;
-            }*/
-
+            }
         }
 
         @Override

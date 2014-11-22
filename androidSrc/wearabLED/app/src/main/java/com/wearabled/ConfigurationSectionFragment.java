@@ -77,7 +77,6 @@ public class ConfigurationSectionFragment extends Fragment {
         mConnectButton = (Button) rootView.findViewById(R.id.connectButton);
         mConnectButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-
                 disableGui();
                 mConfigProgress.setVisibility(View.VISIBLE);
                 ConnectThread connectThread = new ConnectThread(
