@@ -20,6 +20,7 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:support-v4:18.0.+"
+    compile 'com.android.support:support-v4:18.0.+'
+    compile 'com.larswerkman:HoloColorPicker:1.4'
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
