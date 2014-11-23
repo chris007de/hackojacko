@@ -1,0 +1,14 @@
+{
+    "arduino_folder": "/home/chris/tools/arduino-1.0.5", 
+    "baudrate": 4, 
+    "board": 0, 
+    "display_mode": 1, 
+    "full_compilation": true, 
+    "line_ending": 3, 
+    "platform": 1, 
+    "platform_name": "Arduino AVR Boards", 
+    "programmer": {
+        "1": 1
+    }, 
+    "serial_port": 0
+}
