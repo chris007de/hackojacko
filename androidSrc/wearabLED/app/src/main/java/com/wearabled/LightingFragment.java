@@ -6,22 +6,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.content.Context;
-import android.widget.Toast;
 import android.graphics.Color;
 
 import java.nio.ByteBuffer;
-
-import com.wearabled.HandleHelper;
-import com.wearabled.ConnectionThread;
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.ValueBar;
 
-import com.wearabled.R;
-
+/*
+ * \TODO Add Toast for unconnected message sends
+ * \TODO Encapsulate the HackoJackoProtocol in an extra class
+ */
 public class LightingFragment extends Fragment implements ColorPicker.OnColorChangedListener {
-
-    ConnectionThread mConThread = null;
     public LightingFragment() {
 
     }
@@ -35,16 +30,49 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
         Button lightButton = (Button) rootView.findViewById(R.id.makeLights);
         lightButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                byte[] lol = new byte[] {0x54, 0x55, 0x56, 0x57};
-                //HandleHelper.getConnectionThread().write("1".getBytes());
-                HandleHelper.getConnectionThread().write("TUVW".getBytes());
+                ConnectionThread conThread = HandleHelper.getConnectionThread();
+                if (null == conThread) {
+                    return;
+                }
+                HandleHelper.getConnectionThread().write("1\n".getBytes());
             }
         });
 
         Button darkButton = (Button) rootView.findViewById(R.id.lightOff);
         darkButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                ConnectionThread conThread = HandleHelper.getConnectionThread();
+                if (null == conThread) {
+                    return;
+                }
                 HandleHelper.getConnectionThread().write("2\n".getBytes());
+            }
+        });
+
+        Button blinkButton = (Button) rootView.findViewById(R.id.blink);
+        blinkButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                /*
+                 * \Todo: Send Blink command
+                 */
+            }
+        });
+
+        Button runButton = (Button) rootView.findViewById(R.id.run);
+        runButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                /*
+                 * \Todo: Send Run command
+                 */
+            }
+        });
+
+        Button randomButton = (Button) rootView.findViewById(R.id.random);
+        randomButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                /*
+                 * \Todo: Send random command
+                 */
             }
         });
 
@@ -55,23 +83,19 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
         picker.setOldCenterColor(picker.getColor());
         picker.setOnColorChangedListener(this);
         picker.setShowOldCenterColor(false);
+
         return  rootView;
     }
 
     @Override
     public void onColorChanged(int color) {
-
-        Context context = getActivity().getApplicationContext();
-        CharSequence text = "Color: " + String.valueOf(color);
-        int duration = Toast.LENGTH_SHORT;
-
+        ConnectionThread conThread = HandleHelper.getConnectionThread();
+        if (null == conThread) {
+            return;
+        }
         int r = Color.red(color);
         int g = Color.green(color);
         int b = Color.blue(color);
-
-        //char rR = char (r);
-        //char rG = char (g);
-        //char rB = char (b);
 
         byte[] rBytes = ByteBuffer.allocate(4).putInt(r).array();
         byte[] gBytes = ByteBuffer.allocate(4).putInt(g).array();
@@ -81,14 +105,10 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
         byte gByte = gBytes[3];
         byte bByte = bBytes[3];
 
-        byte[] lol = new byte[] {rByte, gByte, bByte, 0x10, 0x13};
-
-        //HandleHelper.getConnectionThread().write((String.valueOf(rC) + String.valueOf(rG) + String.valueOf(rB) + "\n").getBytes());
-        //HandleHelper.getConnectionThread().write(lol);
+        byte[] colorBytes = new byte[] {rByte, gByte, bByte, 0x10, 0x13};
+        conThread.write(colorBytes);
         Log.d("COLOR" , "R: " + String.valueOf(rByte));
         Log.d("COLOR" , "G: " + String.valueOf(gByte));
         Log.d("COLOR" , "B: " + String.valueOf(bByte));
-
-
     }
 }

@@ -1,26 +1,38 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="com.wearabled.LightingFragment">
+    android:layout_height="match_parent" tools:context="com.wearabled.LightingFragment"
+    android:background="#000000">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_gravity="center_horizontal|top">
+        android:layout_gravity="center_horizontal|top"
+        android:gravity="center_vertical|center_horizontal">
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Licht an!"
-            android:id="@+id/makeLights"
-            android:singleLine="false" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="79dp"
+            android:weightSum="1"
+            android:gravity="center_horizontal">
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Licht aus!"
-            android:id="@+id/lightOff"
-            android:layout_gravity="left|top" />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Licht an!"
+                android:id="@+id/makeLights"
+                android:singleLine="false"
+                android:layout_weight="0.1" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Licht aus!"
+                android:id="@+id/lightOff"
+                android:layout_gravity="left|top"
+                android:layout_weight="0.1" />
+        </LinearLayout>
 
         <com.larswerkman.holocolorpicker.ColorPicker
             android:id="@+id/picker"
@@ -31,6 +43,40 @@
             android:id="@+id/valuebar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal">
+
+            <TableRow
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Blink!"
+                    android:id="@+id/blink"
+                    android:layout_weight="0.33" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Run!"
+                    android:id="@+id/run"
+                    android:layout_weight="0.33" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Random!"
+                    android:id="@+id/random"
+                    android:layout_column="2"
+                    android:layout_weight="0.33" />
+            </TableRow>
+
+        </TableLayout>
 
     </LinearLayout>
 </FrameLayout>

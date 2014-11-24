@@ -44,7 +44,8 @@
             android:text="@string/connectButtonText"
             android:background="@android:color/darker_gray"
             android:clickable="true"
-            android:longClickable="false" />
+            android:longClickable="false"
+            android:layout_weight="0.05" />
 
         <CheckBox
             android:layout_width="match_parent"
