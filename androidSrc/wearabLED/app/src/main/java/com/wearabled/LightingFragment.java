@@ -44,21 +44,21 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
         Button blinkButton = (Button) rootView.findViewById(R.id.blink);
         blinkButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                HackoJackoProtocol.activatePreset(0x03);
+                HackoJackoProtocol.activatePreset((byte)0x03);
             }
         });
 
         Button runButton = (Button) rootView.findViewById(R.id.run);
         runButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                HackoJackoProtocol.activatePreset(0x04);
+                HackoJackoProtocol.activatePreset((byte)0x04);
             }
         });
 
         Button randomButton = (Button) rootView.findViewById(R.id.random);
         randomButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                HackoJackoProtocol.activatePreset(0x05);
+                HackoJackoProtocol.activatePreset((byte)0x05);
             }
         });
 

@@ -10,20 +10,21 @@ import java.nio.ByteBuffer;
  */
 public class HackoJackoProtocol {
 
+    public static final byte OFFCOMMAND    = 0x00;
+    public static final byte ONCOMMAND     = 0x01;
+    public static final byte PRESETCOMMAND = 0x02;
+
+    private static final byte HEADERLEN    = 0x08;
+
     public static void sendAllOffCommand() {
-        sendCommand(0x00);
+        sendSimpleCommand(OFFCOMMAND);
     }
 
     public static void sendAllOnCommand() {
-        sendCommand(0x02);
+        sendSimpleCommand(ONCOMMAND);
     }
 
     public static void sendColorCommand(int color) {
-
-        ConnectionThread conThread = HandleHelper.getConnectionThread();
-        if (null == conThread) {
-            return;
-        }
         int r = Color.red(color);
         int g = Color.green(color);
         int b = Color.blue(color);
@@ -37,21 +38,49 @@ public class HackoJackoProtocol {
         byte bByte = bBytes[3];
 
         byte[] colorBytes = new byte[] {rByte, gByte, bByte, 0x10, 0x13};
-        conThread.write(colorBytes);
         Log.d("COLOR", "R: " + String.valueOf(rByte));
         Log.d("COLOR" , "G: " + String.valueOf(gByte));
         Log.d("COLOR" , "B: " + String.valueOf(bByte));
+
+        /*
+         * \TODO construct the actual message
+         */
+        sendMsg(colorBytes);
     }
 
-    public static void activatePreset(int presetId) {
-        sendCommand(presetId);
+    public static void activatePreset(byte presetId) {
+        /*
+         * \TODO Preset command....
+         */
     }
 
-    private static void sendCommand(int commandId) {
+    private static void sendMsg (byte [] msg) {
         ConnectionThread conThread = HandleHelper.getConnectionThread();
         if (null == conThread) {
             return;
         }
-        HandleHelper.getConnectionThread().write("2\n".getBytes());
+        HandleHelper.getConnectionThread().write(msg);
+    }
+
+    private static void sendSimpleCommand(byte commandId) {
+        if (ONCOMMAND == commandId || OFFCOMMAND == commandId) {
+            sendMsg(constructHeader(commandId, HEADERLEN));
+        }
+    }
+
+    private static byte [] constructHeader(byte msgType, byte msgLen) {
+        /*
+         * \TODO fill in the correct header bytes :)
+         */
+        byte[] header = new byte[HEADERLEN];
+        header[0] = 'A';
+        header[1] = 'J';
+        header[2] = 'A';
+        header[3] = 'B';
+        header[4] = msgType;
+        header[5] = 0;
+        header[6] = msgLen;
+        header[7] = 0;
+        return header;
     }
 }
