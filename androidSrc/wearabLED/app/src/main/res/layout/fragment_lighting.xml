@@ -32,6 +32,13 @@
                 android:id="@+id/lightOff"
                 android:layout_gravity="left|top"
                 android:layout_weight="0.1" />
+
+            <Switch
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dance!"
+                android:id="@+id/sensorSwitch"
+                android:layout_weight="0.2" />
         </LinearLayout>
 
         <com.larswerkman.holocolorpicker.ColorPicker
