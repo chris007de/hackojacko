@@ -10,11 +10,11 @@ import java.nio.ByteBuffer;
  */
 public class HackoJackoProtocol {
 
-    public static final byte OFFCOMMAND    = 0x00;
-    public static final byte ONCOMMAND     = 0x01;
+    public static final byte OFFCOMMAND = 0x00;
+    public static final byte ONCOMMAND = 0x01;
     public static final byte PRESETCOMMAND = 0x02;
 
-    private static final byte HEADERLEN    = 0x08;
+    private static final byte HEADERLEN = 0x08;
 
     public static void sendAllOffCommand() {
         sendSimpleCommand(OFFCOMMAND);
@@ -37,15 +37,13 @@ public class HackoJackoProtocol {
         byte gByte = gBytes[3];
         byte bByte = bBytes[3];
 
-        byte[] colorBytes = new byte[] {rByte, gByte, bByte, 0x10, 0x13};
-        Log.d("COLOR", "R: " + String.valueOf(rByte));
-        Log.d("COLOR" , "G: " + String.valueOf(gByte));
-        Log.d("COLOR" , "B: " + String.valueOf(bByte));
+        byte[] colorBytes = new byte[]{rByte, gByte, bByte};
+        Log.d("COLOR", "R: " + String.valueOf(r));
+        Log.d("COLOR", "G: " + String.valueOf(g));
+        Log.d("COLOR", "B: " + String.valueOf(b));
 
-        /*
-         * \TODO construct the actual message
-         */
-        sendMsg(colorBytes);
+        byte[] header = constructHeader(PRESETCOMMAND, 3);
+        sendMsg(marshallPacket(header, colorBytes));
     }
 
     public static void activatePreset(byte presetId) {
@@ -64,23 +62,30 @@ public class HackoJackoProtocol {
 
     private static void sendSimpleCommand(byte commandId) {
         if (ONCOMMAND == commandId || OFFCOMMAND == commandId) {
-            sendMsg(constructHeader(commandId, HEADERLEN));
+            sendMsg(constructHeader(commandId, 0));
         }
     }
 
-    private static byte [] constructHeader(byte msgType, byte msgLen) {
-        /*
-         * \TODO fill in the correct header bytes :)
-         */
+    private static byte [] constructHeader(byte msgType, int msgLen) {
+        int totalLen = msgLen + HEADERLEN;
+        byte[] lenBytes = ByteBuffer.allocate(4).putInt(totalLen).array();
         byte[] header = new byte[HEADERLEN];
         header[0] = 'A';
         header[1] = 'J';
         header[2] = 'A';
         header[3] = 'B';
         header[4] = msgType;
-        header[5] = 0;
-        header[6] = msgLen;
-        header[7] = 0;
+        header[5] = lenBytes[3];
+        header[6] = lenBytes[2];
+        header[7] = 0; // \TODO insert CRC check!
         return header;
+    }
+
+    private static byte[] marshallPacket(byte[] header, byte[] body) {
+        int length = header.length + body.length;
+        byte[] msg = new byte[length];
+        System.arraycopy(header, 0, msg, 0, header.length);
+        System.arraycopy(body, 0, msg, header.length, body.length);
+        return msg;
     }
 }
