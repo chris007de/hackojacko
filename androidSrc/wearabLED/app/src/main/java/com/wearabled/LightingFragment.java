@@ -68,12 +68,10 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
                     }
 
                 }
-
                 last_x = x;
                 last_y = y;
                 last_z = z;
             }
-
         }
     }
 
@@ -97,7 +95,7 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
             }
         });
 
-        Button blinkButton = (Button) rootView.findViewById(R.id.blink);
+       Button blinkButton = (Button) rootView.findViewById(R.id.blink);
         blinkButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 HackoJackoProtocol.activatePreset((byte)0x03);
@@ -158,14 +156,14 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     @Override
     public void onColorChanged(int color) {
 
-        int noOfLeds = 0;
-        SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String noLeds = SP.getString("noLEDs","0");
-        try {
-            noOfLeds = Integer.parseInt(noLeds);
-        } catch (NumberFormatException e) {
-        }
-        Log.d("onColorChanged: ", noLeds);
+        int noOfLeds = 1;
+        //SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        //String noLeds = SP.getString("noLEDs","0");
+        //try {
+        //    noOfLeds = Integer.parseInt(noLeds);
+        //} catch (NumberFormatException e) {
+        //}
+        //Log.d("onColorChanged: ", noLeds);
         HackoJackoProtocol.sendColorCommand(color, noOfLeds);
     }
 }
