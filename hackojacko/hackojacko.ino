@@ -26,28 +26,32 @@ void setup() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
 
   // sets the pins as outputs:
-  pinMode(statusLED, OUTPUT);
-  digitalWrite(statusLED, LOW);
+  pinMode(DEBUG_PIN, OUTPUT);
+  digitalWrite(DEBUG_PIN, LOW);
 
   Serial.begin(115200); // Default connection rate for my BT module
   bluetooth.begin(9600);  // The Bluetooth Mate defaults to 115200bps
 
   Timer = millis();
 }
+void checkBT(char *pMsgType);
 
 void loop() {
-  checkBT();
-  // if the state is 0 the led will turn off
-  if (state == '0') {
-    digitalWrite(statusLED, LOW);
+  char msgType = -1;
+  checkBT(&msgType);
+
+/*
+  if(0x00 == msgType)
+  {
+     Serial.println("OFF!");
+    leds[0] = CRGB::Black;
   }
-  // if the state is 1 the led will turn on
-  else if (state == '1') {
-    digitalWrite(statusLED, HIGH);
-  } 
-
-  leds[0] = CRGB(r,g,b);
-
+  else if(0x03 == msgType)
+  {
+     Serial.println("ON!");
+    leds[0] = CRGB::Red;
+  }
+  */
   /*
   if( (millis() - Timer) >= 500UL)
   {
@@ -60,13 +64,127 @@ void loop() {
   }
   */
 
-  FastLED.show();
+  
 
 }
 
-void checkBT() {
-  //if some data is sent, read it and save it in the state variable
-  if(bluetooth.available() > 0){
-    Serial.print((char)bluetooth.read());
+enum msg_read_states {
+  S_READY_TO_READ,
+  S_READ_HEADER1,
+  S_READ_HEADER2,
+  S_READ_HEADER3,
+  S_READ_MSGTYPE,
+  S_READ_MSGLEN_1,
+  S_READ_MSGLEN_2,
+  S_READ_CRC,
+  S_READ_COLOR_R,
+  S_READ_COLOR_G,
+  S_READ_COLOR_B
+};
+
+void checkBT(char *pMsgType) {
+  static enum msg_read_states fsm_state;
+  char msgType;
+  short msgLen;
+  byte r = 0, g = 0, b = 0;
+  bool setColors = false;
+  fsm_state = S_READY_TO_READ;
+
+  while(bluetooth.available() > 0){
+    delay(10);
+    char rxbyte = (char)bluetooth.read();
+
+    switch (fsm_state) {
+        case S_READY_TO_READ:
+          if('A' == rxbyte) { fsm_state = S_READ_HEADER1; }
+          else { fsm_state = S_READY_TO_READ;}
+          break;
+        case S_READ_HEADER1:
+          if('J' == rxbyte) { fsm_state = S_READ_HEADER2; }
+          else { fsm_state = S_READY_TO_READ;}
+          break;
+        case S_READ_HEADER2:
+          if('A' == rxbyte) { fsm_state = S_READ_HEADER3; }
+          else { fsm_state = S_READY_TO_READ;}
+          break;
+        case S_READ_HEADER3:
+          if('B' == rxbyte) { fsm_state = S_READ_MSGTYPE; }
+          else { fsm_state = S_READY_TO_READ;}
+          break;
+        case S_READ_MSGTYPE:
+          msgType = rxbyte;
+          fsm_state = S_READ_MSGLEN_1;
+          break;
+        case S_READ_MSGLEN_1:
+          msgLen = rxbyte;
+          fsm_state = S_READ_MSGLEN_2;
+          break;
+        case S_READ_MSGLEN_2:
+          msgLen += rxbyte << 8;
+          fsm_state = S_READ_CRC;
+          break;
+        case S_READ_CRC:
+          // lol fuck this shit
+          if(0x02 == msgType)
+          {
+            fsm_state = S_READ_COLOR_R;
+          }
+          else
+          {
+            fsm_state = S_READY_TO_READ;
+          }
+          break;
+        case S_READ_COLOR_R:
+          r = rxbyte;
+          fsm_state = S_READ_COLOR_G;
+          break;
+        case S_READ_COLOR_G:
+          g = rxbyte;
+          fsm_state = S_READ_COLOR_B;
+          break;
+        case S_READ_COLOR_B:
+          b = rxbyte;
+          setColors = true;
+          fsm_state = S_READY_TO_READ;
+          break;
+        default:
+          // do something
+          break;
+    }
+
+     //Serial.println(rxbyte+48);
+  if(0x00 == msgType)
+  {
+    //Serial.println("OFF!");
+    for(unsigned int i = 0; i< NUM_LEDS; i++)
+    {
+      leds[i] = CRGB::Black;
+    } 
+    FastLED.show();
+  }
+  else if(0x03 == msgType)
+  {
+     //Serial.println("ON!");
+    leds[0] = CRGB::Red;
+    FastLED.show();
+  }
+  else if( 0x02 == msgType && setColors)
+  {
+    Serial.println("");
+    Serial.println(r,HEX);
+    Serial.println(g,HEX);
+    Serial.println(b,HEX);
+    for(unsigned int i = 0; i< NUM_LEDS; i++)
+    {
+      leds[i] = CRGB(r,g,b);
+    }    
+    FastLED.show();
+    setColors = false;
+  }
+
   } 
+
+
 }
+
+
