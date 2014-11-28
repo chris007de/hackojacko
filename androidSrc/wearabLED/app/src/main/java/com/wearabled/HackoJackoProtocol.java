@@ -11,8 +11,9 @@ import java.nio.ByteBuffer;
 public class HackoJackoProtocol {
 
     public static final byte OFFCOMMAND = 0x00;
-    public static final byte ONCOMMAND = 0x01;
-    public static final byte PRESETCOMMAND = 0x02;
+    public static final byte COLCOMMAND = 0x02;
+    public static final byte ONCOMMAND =  0x03;
+    public static final byte PRESETCOMMAND = 0x01;
 
     private static final byte HEADERLEN = 0x08;
 
@@ -24,7 +25,9 @@ public class HackoJackoProtocol {
         sendSimpleCommand(ONCOMMAND);
     }
 
-    public static void sendColorCommand(int color) {
+    public static void sendColorCommand(int color, int noLeds) {
+
+
         int r = Color.red(color);
         int g = Color.green(color);
         int b = Color.blue(color);
@@ -37,12 +40,22 @@ public class HackoJackoProtocol {
         byte gByte = gBytes[3];
         byte bByte = bBytes[3];
 
-        byte[] colorBytes = new byte[]{rByte, gByte, bByte};
+        //byte[] colorBytes = new byte[]{rByte, gByte, bByte};
+
+
+         byte[] colorBytes = new byte[noLeds * 3];
+         for (int i = 0; i < noLeds * 3; i += 3)
+         {
+            colorBytes[i] = rByte;
+            colorBytes[i + 1] = gByte;
+            colorBytes[i + 2] = bByte;
+         }
+
         Log.d("COLOR", "R: " + String.valueOf(r));
         Log.d("COLOR", "G: " + String.valueOf(g));
         Log.d("COLOR", "B: " + String.valueOf(b));
 
-        byte[] header = constructHeader(PRESETCOMMAND, 3);
+        byte[] header = constructHeader(COLCOMMAND, noLeds * 3);
         sendMsg(marshallPacket(header, colorBytes));
     }
 

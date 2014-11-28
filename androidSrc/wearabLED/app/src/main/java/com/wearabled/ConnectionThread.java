@@ -48,6 +48,7 @@ public class ConnectionThread extends Thread {
     public void write(byte[] bytes) {
         try {
             mOutStream.write(bytes);
+            mOutStream.flush();
         } catch (IOException e) { }
     }
 

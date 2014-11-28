@@ -1,9 +1,11 @@
 package com.wearabled;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -156,7 +158,14 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     @Override
     public void onColorChanged(int color) {
 
-        HackoJackoProtocol.sendColorCommand(color);
-
+        int noOfLeds = 0;
+        SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String noLeds = SP.getString("noLEDs","0");
+        try {
+            noOfLeds = Integer.parseInt(noLeds);
+        } catch (NumberFormatException e) {
+        }
+        Log.d("onColorChanged: ", noLeds);
+        HackoJackoProtocol.sendColorCommand(color, noOfLeds);
     }
 }
