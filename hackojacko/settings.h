@@ -5,7 +5,8 @@
 
 #define DATA_PIN 12
 
-#define DEBUG_PIN 13
+typedef unsigned int uint;
 
+#define HEADER_SIZE 8;
 
 #endif // SETTINGS_H
