@@ -8,18 +8,24 @@
 
 void checkBT(char *pMsgType);
 
+// 8 byte header
+// + 50 * 3 byte max body length
+#define RXBUF_SIZE 158
+struct s_packet{
+  char msgType;
+  short msgLen;
+  char msgCRC;
+  char rxBuffer[RXBUF_SIZE];
+  };
+
+struct s_packet packets[3];
+
 // Define the array of leds
 CRGB leds[NUM_LEDS];
 
 int bluetoothTx = 2;  // TX-O pin of bluetooth module
 int bluetoothRx = 3;  // RX-I pin of bluetooth module
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
-
-// 8 byte header
-// + 50 * 3 byte max body length
-#define RXBUF_SIZE 158
-char rxBuffer[RXBUF_SIZE];
-
 
 void setup() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
@@ -59,7 +65,7 @@ void loop() {
   
 
 }
-
+/*
 enum msg_read_states {
   S_READY_TO_READ,
   S_READ_HEADER1,
@@ -178,98 +184,102 @@ void checkBT(char *pMsgType) {
 
 
 }
-
+*/
+enum fsm_states{
+  S_READY_TO_READ,
+  S_PREAMBLE1,
+  S_PREAMBLE2,
+  S_PREAMBLE3,
+  S_READ_HEADER,
+  S_READ_BODY
+};
 /* reads Message from BT Serial interface
  * returns amount of read bytes
  */
-uint readBT(void) {
+bool readBT(void) {
+
   if(bluetooth.available() > 0) {
     delay(50); // DEBUG delay to read serial buffer
-    
-    // clear rxBuffer
-    memset(rxBuffer, 0, sizeof(rxBuffer));
+    enum fsm_states fsm_state = S_READY_TO_READ;
+    while(bluetooth.available() > 0)
+    {
+      switch (fsm_state) {
+        case S_READY_TO_READ:
+          if('A' == (char)bluetooth.read())
+            { fsm_state = S_PREAMBLE1; }
+          else { fsm_state = S_READY_TO_READ;}
+          break;
+        case S_PREAMBLE1:
+          if('J' == (char)bluetooth.read())
+            { fsm_state = S_PREAMBLE2; }
+          else { fsm_state = S_READY_TO_READ;}
+          break;
+        case S_PREAMBLE2:
+          if('A' == (char)bluetooth.read())
+            { fsm_state = S_PREAMBLE3; }
+          else { fsm_state = S_READY_TO_READ;}
+          break;
+        case S_PREAMBLE3:
+          if('B' == (char)bluetooth.read())
+            { fsm_state = S_READ_HEADER; }
+          else { fsm_state = S_READY_TO_READ;}
+          break;
 
-    uint i = 0;
-    while(bluetooth.available() > 0) {
-      rxBuffer[i++];
-    }
-    return i;
-  }
-  return 0;
-}
+        case S_READ_HEADER:
+          // 1 byte MSG_TYPE
+          packets[0].msgType = (char)bluetooth.read();
+          // 2 byte MSG_LENGTH (MSB-LSB)
+          packets[0].msgLen  = (char)bluetooth.read() << 8;
+          packets[0].msgLen += (char)bluetooth.read();
+          // 1 byte MSG_CRC
+          packets[0].msgCRC  = (char)bluetooth.read();
+          
+          fsm_state = S_READ_BODY;
+          break;
 
-void evalRxBuf() {
-  enum e_rxState{
-    s_init,
-    s_getHeader,
-    s_getPreset,
-    s_getDirect,
-    s_finish,
-    s_abort
-  };
+        case S_READ_BODY:      
+          // clear rxBuffer
+          memset(packets[0].rxBuffer, 0, sizeof(packets[0].rxBuffer));
 
-  char MSG_TYPE = -1;
-  short MSG_LEN = -1;
-  char CRC8     = -1;
+          for(short i=0; 
+              i<RXBUF_SIZE && i<(packets[0].msgLen); 
+              i++)
+          {
+            packets[0].rxBuffer[i] = (char)bluetooth.read();
+          }
+          return true;
+          break;
 
-  enum e_rxState rxState = s_init;
-  while(s_abort != rxState
-        && s_finish != rxState)
-  {
-    switch(rxState) {
-      case s_init:
-        // Check preamble
-        if( 'A' == rxBuffer[0]
-            && 'J' == rxBuffer[1]
-            && 'A' == rxBuffer[2]
-            && 'B' == rxBuffer[3])
-        { rxState = s_getHeader; }
-        else
-        { rxState = s_abort; }
-        break;
-
-      case s_getHeader:
-        // Read Header fields
-        MSG_TYPE = rxBuffer[4];
-        MSG_LEN  = rxBuffer[5] << 8;
-        MSG_LEN += rxBuffer[6];
-        CRC8     = rxBuffer[7];
-        // validate Header content
-        // TODO
-
-        switch (MSG_TYPE) {
-            case 0x00:
-              rxState = s_getPreset;
-              break;
-            case 0x01:
-              rxState = s_getDirect;
-              break;
-            default:
-              break;
+        default:
+          break;
         }
 
-        break;
+    }
+  }
+  return false;
+}
 
-      case s_getPreset:
-        switch (rxBuffer[8]) {
+void evalPacket() {
+
+  switch (packets[0].msgType) {
+      case 0x00:
+        switch (packets[0].rxBuffer[0]) {
             case 0x00:
               memset(leds, 0, sizeof(leds));
               break;
             default:
               break;
         }
-        rxState = s_finish;
         break;
-
-      case s_getDirect:
+      case 0x01:
         for(short i=0; i<NUM_LEDS;i++) {
-          short idx = HEADER_SIZE + (i*3);
-          if((idx+2) <= MSG_LEN)
+          short idx = (i*3);
+          if((idx+2) <= packets[0].msgLen)
           { // Read R,G,B from Message Body
             // regarding the length of the msg
-            byte r = (byte)rxBuffer[idx];
-            byte g = (byte)rxBuffer[idx + 1];
-            byte b = (byte)rxBuffer[idx + 2];
+            byte r = (byte)packets[0].rxBuffer[idx];
+            byte g = (byte)packets[0].rxBuffer[idx + 1];
+            byte b = (byte)packets[0].rxBuffer[idx + 2];
             leds[i] = CRGB(r, g, b);
           }
           else
@@ -277,14 +287,8 @@ void evalRxBuf() {
             leds[i] = CRGB::Black;
           }
         }
-        rxState = s_finish;
         break;
-
       default:
         break;
-    }
   }
-
 }
-
-
