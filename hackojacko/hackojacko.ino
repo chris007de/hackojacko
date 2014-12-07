@@ -6,19 +6,9 @@
 #include "chackojacko.h"
 
 
-void checkBT(char *pMsgType);
+struct s_packet* readBT();
+bool evalPacket(struct s_packet*);
 
-// 8 byte header
-// + 50 * 3 byte max body length
-#define RXBUF_SIZE 158
-struct s_packet{
-  char msgType;
-  short msgLen;
-  char msgCRC;
-  char rxBuffer[RXBUF_SIZE];
-  };
-
-struct s_packet packets[3];
 
 // Define the array of leds
 CRGB leds[NUM_LEDS];
@@ -32,13 +22,18 @@ void setup() {
 
   Serial.begin(115200); // Default connection rate for my BT module
   bluetooth.begin(9600);  // The Bluetooth Mate defaults to 115200bps
+
+  for(byte i=0; i<NUM_BUFFERS; i++) {
+    packets[i].active = false;
+  }
 }
 
 void loop() {
-  char msgType = -1;
-  checkBT(&msgType);
+  evalPacket(readBT());
 
 /*
+  char msgType = -1;
+  checkBT(&msgType);
   if(0x00 == msgType)
   {
      Serial.println("OFF!");
@@ -185,22 +180,28 @@ void checkBT(char *pMsgType) {
 
 }
 */
-enum fsm_states{
-  S_READY_TO_READ,
-  S_PREAMBLE1,
-  S_PREAMBLE2,
-  S_PREAMBLE3,
-  S_READ_HEADER,
-  S_READ_BODY
-};
-/* reads Message from BT Serial interface
- * returns amount of read bytes
- */
-bool readBT(void) {
+
+
+struct s_packet* readBT(void) {
+
+  struct s_packet* packet;
+  /*
+  // look for free packet buffer
+  for(byte i=0; i<NUM_BUFFERS; i++) {
+    if(packets[i].active = false) {
+      packet = &packets[i];
+      break;
+    }
+    if(i == NUM_BUFFERS-1) {
+      // no free buffer available
+      return NULL;
+    }
+  } */
+  packet = &packets[0];
 
   if(bluetooth.available() > 0) {
     delay(50); // DEBUG delay to read serial buffer
-    enum fsm_states fsm_state = S_READY_TO_READ;
+    enum rx_states fsm_state = S_READY_TO_READ;
     while(bluetooth.available() > 0)
     {
       switch (fsm_state) {
@@ -227,27 +228,27 @@ bool readBT(void) {
 
         case S_READ_HEADER:
           // 1 byte MSG_TYPE
-          packets[0].msgType = (char)bluetooth.read();
+          packet->msgType = (char)bluetooth.read();
           // 2 byte MSG_LENGTH (MSB-LSB)
-          packets[0].msgLen  = (char)bluetooth.read() << 8;
-          packets[0].msgLen += (char)bluetooth.read();
+          packet->msgLen  = (char)bluetooth.read() << 8;
+          packet->msgLen += (char)bluetooth.read();
           // 1 byte MSG_CRC
-          packets[0].msgCRC  = (char)bluetooth.read();
+          packet->msgCRC  = (char)bluetooth.read();
           
           fsm_state = S_READ_BODY;
           break;
 
         case S_READ_BODY:      
           // clear rxBuffer
-          memset(packets[0].rxBuffer, 0, sizeof(packets[0].rxBuffer));
+          memset(packet->rxBuffer, 0, sizeof(packet->rxBuffer));
 
           for(short i=0; 
-              i<RXBUF_SIZE && i<(packets[0].msgLen); 
+              i<RXBUF_SIZE && i<(packet->msgLen); 
               i++)
           {
-            packets[0].rxBuffer[i] = (char)bluetooth.read();
+            packet->rxBuffer[i] = (char)bluetooth.read();
           }
-          return true;
+          return packet;
           break;
 
         default:
@@ -256,30 +257,47 @@ bool readBT(void) {
 
     }
   }
-  return false;
+  return NULL;
 }
 
-void evalPacket() {
+/*
+ * returns true if packet was 
+ * evaluated successfully
+ */
+bool evalPacket(struct s_packet* pPacket) {
+  if (NULL == pPacket) {
+    return false;
+  }
 
-  switch (packets[0].msgType) {
-      case 0x00:
-        switch (packets[0].rxBuffer[0]) {
-            case 0x00:
+  byte r,g,b;
+
+  switch (pPacket->msgType) {
+      case 0x00: // PRESET
+        switch (pPacket->rxBuffer[0]) {
+            case 0x00: // ALL OFF
               memset(leds, 0, sizeof(leds));
               break;
+            case 0x01: // ALL ON
+              r = (byte)pPacket->rxBuffer[1];
+              g = (byte)pPacket->rxBuffer[2];
+              b = (byte)pPacket->rxBuffer[3];
+              for(short i=0; i<NUM_LEDS; i++){
+                  leds[i] = CRGB(r, g, b);
+              }
             default:
+              return false;
               break;
         }
         break;
-      case 0x01:
+      case 0x01: // 
         for(short i=0; i<NUM_LEDS;i++) {
           short idx = (i*3);
-          if((idx+2) <= packets[0].msgLen)
+          if((idx+2) <= pPacket->msgLen)
           { // Read R,G,B from Message Body
             // regarding the length of the msg
-            byte r = (byte)packets[0].rxBuffer[idx];
-            byte g = (byte)packets[0].rxBuffer[idx + 1];
-            byte b = (byte)packets[0].rxBuffer[idx + 2];
+            r = (byte)pPacket->rxBuffer[idx];
+            g = (byte)pPacket->rxBuffer[idx + 1];
+            b = (byte)pPacket->rxBuffer[idx + 2];
             leds[i] = CRGB(r, g, b);
           }
           else
@@ -289,6 +307,9 @@ void evalPacket() {
         }
         break;
       default:
+        return false;
         break;
   }
+  pPacket->active = false;
+  return true;
 }
