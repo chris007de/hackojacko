@@ -5,20 +5,30 @@
 
 #include "chackojacko.h"
 
+// Define the array of leds
+CRGB leds[NUM_LEDS];
 
 struct s_packet* readBT();
 bool evalPacket(struct s_packet*);
 
+//#define DEBUG
 
-// Define the array of leds
-CRGB leds[NUM_LEDS];
+#ifdef DEBUG
+#define DBG_PRINT(x, ...) Serial.print(x, ##__VA_ARGS__)
+#define DBG_PRINTLN(x, ...) Serial.println(x, ##__VA_ARGS__)
+#else
+#define DBG_PRINT(x, ...)
+#define DBG_PRINTLN(x, ...)
+#endif
 
-int bluetoothTx = 2;  // TX-O pin of bluetooth module
-int bluetoothRx = 3;  // RX-I pin of bluetooth module
+
+int bluetoothTx = 12;  // TX-O pin of bluetooth module
+int bluetoothRx = 11;  // RX-I pin of bluetooth module
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
 void setup() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
+  FastLED.setBrightness(BRIGHTNESS);
 
   Serial.begin(115200); // Default connection rate for my BT module
   bluetooth.begin(9600);  // The Bluetooth Mate defaults to 115200bps
@@ -29,157 +39,13 @@ void setup() {
 }
 
 void loop() {
-  evalPacket(readBT());
 
-/*
-  char msgType = -1;
-  checkBT(&msgType);
-  if(0x00 == msgType)
-  {
-     Serial.println("OFF!");
-    leds[0] = CRGB::Black;
+  if(evalPacket(readBT())) {
+    FastLED.show();
   }
-  else if(0x03 == msgType)
-  {
-     Serial.println("ON!");
-    leds[0] = CRGB::Red;
-  }
-  */
-  /*
-  if( (millis() - Timer) >= 500UL)
-  {
-    //leds[i++] = CRGB::Black;
-    //leds[i] = CRGB(random(0,64),random(0,64),random(0,64));
-    leds[i] = CRGB(r,g,b);
-    if(NUM_LEDS == i)
-    { i = 0; }
-    Timer = millis();
-  }
-  */
-
-  
 
 }
-/*
-enum msg_read_states {
-  S_READY_TO_READ,
-  S_READ_HEADER1,
-  S_READ_HEADER2,
-  S_READ_HEADER3,
-  S_READ_MSGTYPE,
-  S_READ_MSGLEN_1,
-  S_READ_MSGLEN_2,
-  S_READ_CRC,
-  S_READ_COLOR_R,
-  S_READ_COLOR_G,
-  S_READ_COLOR_B
-};
 
-void checkBT(char *pMsgType) {
-  static enum msg_read_states fsm_state;
-  char msgType;
-  short msgLen;
-  byte r = 0, g = 0, b = 0;
-  bool setColors = false;
-  fsm_state = S_READY_TO_READ;
-
-  while(bluetooth.available() > 0){
-    delay(10);
-    char rxbyte = (char)bluetooth.read();
-
-    switch (fsm_state) {
-        case S_READY_TO_READ:
-          if('A' == rxbyte) { fsm_state = S_READ_HEADER1; }
-          else { fsm_state = S_READY_TO_READ;}
-          break;
-        case S_READ_HEADER1:
-          if('J' == rxbyte) { fsm_state = S_READ_HEADER2; }
-          else { fsm_state = S_READY_TO_READ;}
-          break;
-        case S_READ_HEADER2:
-          if('A' == rxbyte) { fsm_state = S_READ_HEADER3; }
-          else { fsm_state = S_READY_TO_READ;}
-          break;
-        case S_READ_HEADER3:
-          if('B' == rxbyte) { fsm_state = S_READ_MSGTYPE; }
-          else { fsm_state = S_READY_TO_READ;}
-          break;
-        case S_READ_MSGTYPE:
-          msgType = rxbyte;
-          fsm_state = S_READ_MSGLEN_1;
-          break;
-        case S_READ_MSGLEN_1:
-          msgLen = rxbyte;
-          fsm_state = S_READ_MSGLEN_2;
-          break;
-        case S_READ_MSGLEN_2:
-          msgLen += rxbyte << 8;
-          fsm_state = S_READ_CRC;
-          break;
-        case S_READ_CRC:
-          // lol fuck this shit
-          if(0x02 == msgType)
-          {
-            fsm_state = S_READ_COLOR_R;
-          }
-          else
-          {
-            fsm_state = S_READY_TO_READ;
-          }
-          break;
-        case S_READ_COLOR_R:
-          r = rxbyte;
-          fsm_state = S_READ_COLOR_G;
-          break;
-        case S_READ_COLOR_G:
-          g = rxbyte;
-          fsm_state = S_READ_COLOR_B;
-          break;
-        case S_READ_COLOR_B:
-          b = rxbyte;
-          setColors = true;
-          fsm_state = S_READY_TO_READ;
-          break;
-        default:
-          // do something
-          break;
-    }
-
-     //Serial.println(rxbyte+48);
-  if(0x00 == msgType)
-  {
-    //Serial.println("OFF!");
-    for(unsigned int i = 0; i< NUM_LEDS; i++)
-    {
-      leds[i] = CRGB::Black;
-    } 
-    FastLED.show();
-  }
-  else if(0x03 == msgType)
-  {
-     //Serial.println("ON!");
-    leds[0] = CRGB::Red;
-    FastLED.show();
-  }
-  else if( 0x02 == msgType && setColors)
-  {
-    Serial.println("");
-    Serial.println(r,HEX);
-    Serial.println(g,HEX);
-    Serial.println(b,HEX);
-    for(unsigned int i = 0; i< NUM_LEDS; i++)
-    {
-      leds[i] = CRGB(r,g,b);
-    }    
-    FastLED.show();
-    setColors = false;
-  }
-
-  } 
-
-
-}
-*/
 
 
 struct s_packet* readBT(void) {
@@ -200,7 +66,7 @@ struct s_packet* readBT(void) {
   packet = &packets[0];
 
   if(bluetooth.available() > 0) {
-    delay(50); // DEBUG delay to read serial buffer
+    delay(5); // DEBUG delay to read serial buffer
     enum rx_states fsm_state = S_READY_TO_READ;
     while(bluetooth.available() > 0)
     {
@@ -229,13 +95,29 @@ struct s_packet* readBT(void) {
         case S_READ_HEADER:
           // 1 byte MSG_TYPE
           packet->msgType = (char)bluetooth.read();
-          // 2 byte MSG_LENGTH (MSB-LSB)
-          packet->msgLen  = (char)bluetooth.read() << 8;
-          packet->msgLen += (char)bluetooth.read();
+          // 2 byte MSG_LENGTH
+          packet->msgLen  = (char)bluetooth.read();
+          packet->msgLen += (char)bluetooth.read() << 8;
           // 1 byte MSG_CRC
           packet->msgCRC  = (char)bluetooth.read();
+
+          // poor sanity checks
+          if(0x00 != packet->msgCRC
+            || 0x0F < packet->msgLen) {
+            fsm_state = S_READY_TO_READ;
+          }
+          else
+          {
+            DBG_PRINT("MSG: 0x");
+            DBG_PRINT(packet->msgType, HEX);
+            DBG_PRINT(" LEN: 0x");
+            DBG_PRINT(packet->msgLen, HEX);
+            DBG_PRINT(" CRC: 0x");
+            DBG_PRINTLN(packet->msgCRC, HEX);
+
+            fsm_state = S_READ_BODY;
+          }
           
-          fsm_state = S_READ_BODY;
           break;
 
         case S_READ_BODY:      
@@ -272,40 +154,48 @@ bool evalPacket(struct s_packet* pPacket) {
   byte r,g,b;
 
   switch (pPacket->msgType) {
-      case 0x00: // PRESET
+      case T_PRESET:
+        DBG_PRINTLN("  PRESET");
         switch (pPacket->rxBuffer[0]) {
-            case 0x00: // ALL OFF
-              memset(leds, 0, sizeof(leds));
+            case P_ALL_OFF:
+              DBG_PRINTLN("    ALL OFF");
+              memset(leds, 0x00, sizeof(leds));
               break;
-            case 0x01: // ALL ON
-              r = (byte)pPacket->rxBuffer[1];
-              g = (byte)pPacket->rxBuffer[2];
-              b = (byte)pPacket->rxBuffer[3];
-              for(short i=0; i<NUM_LEDS; i++){
-                  leds[i] = CRGB(r, g, b);
-              }
+            case P_ALL_ON:
+              DBG_PRINTLN("    ALL ON");
+              memset(leds, 0xFF, sizeof(leds));
+            case P_BLINK:
+              DBG_PRINTLN("    P_BLINK");
+              break;
+            case P_RUN:
+              DBG_PRINTLN("    P_RUN");
+              break;
+            case P_RANDOM:
+              DBG_PRINTLN("    P_RANDOM");
+              break;
             default:
+              DBG_PRINTLN("    unknown");
               return false;
               break;
         }
         break;
-      case 0x01: // 
-        for(short i=0; i<NUM_LEDS;i++) {
-          short idx = (i*3);
-          if((idx+2) <= pPacket->msgLen)
-          { // Read R,G,B from Message Body
-            // regarding the length of the msg
-            r = (byte)pPacket->rxBuffer[idx];
-            g = (byte)pPacket->rxBuffer[idx + 1];
-            b = (byte)pPacket->rxBuffer[idx + 2];
+      case T_DIRECT: // DIRECT
+        DBG_PRINTLN("  DIRECT");
+
+        r = (byte)pPacket->rxBuffer[0];
+        g = (byte)pPacket->rxBuffer[1];
+        b = (byte)pPacket->rxBuffer[2];
+        for(short i=0; i<NUM_LEDS; i++){
             leds[i] = CRGB(r, g, b);
-          }
-          else
-          { // Turn of rest of LEDs
-            leds[i] = CRGB::Black;
-          }
         }
+        DBG_PRINT(" ");
+        DBG_PRINT(r, DEC);
+        DBG_PRINT(" ");
+        DBG_PRINT(g, DEC);
+        DBG_PRINT(" ");
+        DBG_PRINTLN(b, DEC);
         break;
+
       default:
         return false;
         break;

@@ -1,13 +1,25 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#define NUM_LEDS 50
+#define NUM_LEDS 20
+#define BRIGHTNESS 64
 
-#define DATA_PIN 12
+#define DATA_PIN 10
 
 typedef unsigned int uint;
 
-#define NUM_BUFFERS 3
+// MESSAGE TYPES
+#define T_PRESET  0x00
+  #define P_ALL_OFF 0x00
+  #define P_ALL_ON  0x01
+  #define P_BLINK   0x02
+  #define P_RUN     0x03
+  #define P_RANDOM  0x04
+
+#define T_DIRECT  0x01
+// MESSAGE TYPES
+
+#define NUM_BUFFERS 1
 // 50 * 3 byte max body length
 #define RXBUF_SIZE 150
 
