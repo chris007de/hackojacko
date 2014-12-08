@@ -84,35 +84,35 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
         Button lightButton = (Button) rootView.findViewById(R.id.makeLights);
         lightButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                HackoJackoProtocol.sendAllOnCommand();
+                HackoJackoProtocol.activatePreset(HackoJackoProtocol.P_ALL_ON);
             }
         });
 
         Button darkButton = (Button) rootView.findViewById(R.id.lightOff);
         darkButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                HackoJackoProtocol.sendAllOffCommand();
+                HackoJackoProtocol.activatePreset(HackoJackoProtocol.P_ALL_OFF);
             }
         });
 
        Button blinkButton = (Button) rootView.findViewById(R.id.blink);
         blinkButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                HackoJackoProtocol.activatePreset((byte)0x03);
+                HackoJackoProtocol.activatePreset(HackoJackoProtocol.P_BLINK);
             }
         });
 
         Button runButton = (Button) rootView.findViewById(R.id.run);
         runButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                HackoJackoProtocol.activatePreset((byte)0x04);
+                HackoJackoProtocol.activatePreset(HackoJackoProtocol.P_RUN);
             }
         });
 
         Button randomButton = (Button) rootView.findViewById(R.id.random);
         randomButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                HackoJackoProtocol.activatePreset((byte)0x05);
+                HackoJackoProtocol.activatePreset(HackoJackoProtocol.P_RANDOM);
             }
         });
 
@@ -144,7 +144,7 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     }
 
     private void activateDanceMode() {
-        mSensorManager.registerListener(this,mAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this,mAccelerometer , SensorManager.SENSOR_DELAY_UI);
         mPicker.setClickable(false);
     }
 
@@ -156,7 +156,7 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     @Override
     public void onColorChanged(int color) {
 
-        int noOfLeds = 1;
+        //int noOfLeds = 1;
         //SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getActivity());
         //String noLeds = SP.getString("noLEDs","0");
         //try {
@@ -164,6 +164,6 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
         //} catch (NumberFormatException e) {
         //}
         //Log.d("onColorChanged: ", noLeds);
-        HackoJackoProtocol.sendColorCommand(color, noOfLeds);
+        HackoJackoProtocol.sendColorCommand(color);
     }
 }
