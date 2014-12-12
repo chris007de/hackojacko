@@ -8,6 +8,9 @@
 // Define the array of leds
 CRGB leds[NUM_LEDS];
 
+Hackojacko myHackojacko(leds,0,NUM_LEDS-1);
+
+struct s_packet rxBuffer[NUM_BUFFERS];
 struct s_packet* readBT();
 bool evalPacket(struct s_packet*);
 
@@ -34,7 +37,7 @@ void setup() {
   bluetooth.begin(9600);  // The Bluetooth Mate defaults to 115200bps
 
   for(byte i=0; i<NUM_BUFFERS; i++) {
-    packets[i].active = false;
+    rxBuffer[i].active = false;
   }
 }
 
@@ -43,19 +46,23 @@ void loop() {
   if(evalPacket(readBT())) {
     FastLED.show();
   }
+  myHackojacko.render();
 
 }
 
-
-
+/*
+ * reads bluetooth buffer and evaluates 
+ * packet
+ * returns pointer to packet structure
+ */
 struct s_packet* readBT(void) {
 
   struct s_packet* packet;
   /*
   // look for free packet buffer
   for(byte i=0; i<NUM_BUFFERS; i++) {
-    if(packets[i].active = false) {
-      packet = &packets[i];
+    if(rxBuffer[i].active = false) {
+      packet = &rxBuffer[i];
       break;
     }
     if(i == NUM_BUFFERS-1) {
@@ -63,7 +70,7 @@ struct s_packet* readBT(void) {
       return NULL;
     }
   } */
-  packet = &packets[0];
+  packet = &rxBuffer[0];
 
   if(bluetooth.available() > 0) {
     delay(5); // DEBUG delay to read serial buffer
@@ -121,14 +128,14 @@ struct s_packet* readBT(void) {
           break;
 
         case S_READ_BODY:      
-          // clear rxBuffer
-          memset(packet->rxBuffer, 0, sizeof(packet->rxBuffer));
+          // clear msgBody
+          memset(packet->msgBody, 0, sizeof(packet->msgBody));
 
           for(short i=0; 
               i<RXBUF_SIZE && i<(packet->msgLen); 
               i++)
           {
-            packet->rxBuffer[i] = (char)bluetooth.read();
+            packet->msgBody[i] = (char)bluetooth.read();
           }
           return packet;
           break;
@@ -156,22 +163,26 @@ bool evalPacket(struct s_packet* pPacket) {
   switch (pPacket->msgType) {
       case T_PRESET:
         DBG_PRINTLN("  PRESET");
-        switch (pPacket->rxBuffer[0]) {
+        switch (pPacket->msgBody[0]) {
             case P_ALL_OFF:
               DBG_PRINTLN("    ALL OFF");
-              memset(leds, 0x00, sizeof(leds));
+              myHackojacko.off();
               break;
             case P_ALL_ON:
               DBG_PRINTLN("    ALL ON");
-              memset(leds, 0xFF, sizeof(leds));
+              myHackojacko.on();
+              break;
             case P_BLINK:
               DBG_PRINTLN("    P_BLINK");
+              myHackojacko.blink();
               break;
             case P_RUN:
               DBG_PRINTLN("    P_RUN");
+              myHackojacko.running();
               break;
             case P_RANDOM:
               DBG_PRINTLN("    P_RANDOM");
+              myHackojacko.random(true);
               break;
             default:
               DBG_PRINTLN("    unknown");
@@ -181,13 +192,12 @@ bool evalPacket(struct s_packet* pPacket) {
         break;
       case T_DIRECT: // DIRECT
         DBG_PRINTLN("  DIRECT");
+        
+        r = (byte)pPacket->msgBody[0];
+        g = (byte)pPacket->msgBody[1];
+        b = (byte)pPacket->msgBody[2];
 
-        r = (byte)pPacket->rxBuffer[0];
-        g = (byte)pPacket->rxBuffer[1];
-        b = (byte)pPacket->rxBuffer[2];
-        for(short i=0; i<NUM_LEDS; i++){
-            leds[i] = CRGB(r, g, b);
-        }
+        myHackojacko.setColor(CRGB(r, g, b));
         DBG_PRINT(" ");
         DBG_PRINT(r, DEC);
         DBG_PRINT(" ");

@@ -28,8 +28,8 @@ struct s_packet{
   char msgType;
   short msgLen;
   char msgCRC;
-  char rxBuffer[RXBUF_SIZE];
-  }packets[NUM_BUFFERS];
+  char msgBody[RXBUF_SIZE];
+  };
 
 enum rx_states{
   S_READY_TO_READ,
