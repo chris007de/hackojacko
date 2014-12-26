@@ -5,6 +5,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -15,6 +16,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.graphics.Color;
+import android.os.PowerManager.WakeLock;
 
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.ValueBar;
@@ -144,11 +146,19 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     }
 
     private void activateDanceMode() {
+        PowerManager pm = (PowerManager)
+                getActivity().getSystemService(getActivity().getApplicationContext().POWER_SERVICE);
+        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DanceDance");
+        wl.acquire();
         mSensorManager.registerListener(this,mAccelerometer , SensorManager.SENSOR_DELAY_UI);
         mPicker.setClickable(false);
     }
 
     private void disableDanceMode() {
+        PowerManager pm = (PowerManager)
+                getActivity().getSystemService(getActivity().getApplicationContext().POWER_SERVICE);
+        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DanceDance");
+        wl.release();
         mSensorManager.unregisterListener(this);
         mPicker.setClickable(true);
     }
