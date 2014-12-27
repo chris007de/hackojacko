@@ -31,6 +31,7 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private ColorPicker mPicker = null;
+    private PowerManager.WakeLock mWakeLock = null;
 
     private long lastUpdate = 0;
     private float last_x, last_y, last_z;
@@ -172,8 +173,11 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     private void activateDanceMode() {
         PowerManager pm = (PowerManager)
                 getActivity().getSystemService(getActivity().getApplicationContext().POWER_SERVICE);
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DanceDance");
-        wl.acquire();
+        if (null != mWakeLock ) {
+            mWakeLock.release();
+        }
+        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DanceDance");
+        mWakeLock.acquire();
         mSensorManager.registerListener(this,mAccelerometer , SensorManager.SENSOR_DELAY_UI);
         mPicker.setClickable(false);
     }
@@ -181,8 +185,10 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     private void disableDanceMode() {
         PowerManager pm = (PowerManager)
                 getActivity().getSystemService(getActivity().getApplicationContext().POWER_SERVICE);
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DanceDance");
-        wl.release();
+        if (null != mWakeLock) {
+            mWakeLock.release();
+            mWakeLock = null;
+        }
         mSensorManager.unregisterListener(this);
         mPicker.setClickable(true);
     }
