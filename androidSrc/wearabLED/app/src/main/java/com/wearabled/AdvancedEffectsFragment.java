@@ -5,6 +5,9 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.media.AudioRecord;
+
+import org.jtransforms.fft.DoubleFFT_1D;
 
 /**
  * Created by tapion on 27.12.2014.

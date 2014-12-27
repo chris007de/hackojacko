@@ -17,4 +17,5 @@
     <string name="ConnectionSuccessful">Connected!</string>
     <string name="ConnectionError">Could not connect to target!</string>
     <string name="seeker_text">Blinken Speed</string>
+    <string name="beat_detector_label">Beat Detection</string>
 </resources>
