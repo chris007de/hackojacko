@@ -131,17 +131,22 @@ public class wearabLED extends FragmentActivity implements
                 Fragment fragment = new ConfigurationSectionFragment();
                 return fragment;
             }
-            else // if (2 == position + 1)
+            else if (2 == position + 1)
             {
                 Fragment fragment = new LightingFragment();
                 return fragment;
             }
+            else
+          {
+              Fragment fragment = new AdvancedEffectsFragment();
+              return fragment;
+          }
         }
 
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 2;
+            return 3;
         }
 
         @Override
@@ -152,6 +157,8 @@ public class wearabLED extends FragmentActivity implements
                     return getString(R.string.title_section1).toUpperCase(l);
                 case 1:
                     return getString(R.string.title_section2).toUpperCase(l);
+                case 2:
+                    return getString(R.string.title_section3).toUpperCase(l);
 
             }
             return null;
