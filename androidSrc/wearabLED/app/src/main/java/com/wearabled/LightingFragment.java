@@ -1,12 +1,10 @@
 package com.wearabled;
-import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,7 +14,8 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.graphics.Color;
-import android.os.PowerManager.WakeLock;
+import android.widget.SeekBar;
+
 
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.ValueBar;
@@ -32,6 +31,7 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private ColorPicker mPicker = null;
+    private PowerManager.WakeLock mWakeLock = null;
 
     private long lastUpdate = 0;
     private float last_x, last_y, last_z;
@@ -118,6 +118,29 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
             }
         });
 
+        SeekBar speedSeek = (SeekBar) rootView.findViewById(R.id.speedSeeker);
+        speedSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+                int progress = seekBar.getProgress();
+                Log.d ("ProgressBar", "CurValue: " + String.valueOf(progress));
+                HackoJackoProtocol.sendSpeedCommand( (byte) progress);
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser) {
+                // TODO Auto-generated method stub
+            }
+        });
+
         Switch danceSwitch = (Switch) rootView.findViewById((R.id.sensorSwitch));
         danceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -128,6 +151,8 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
                 }
             }
         });
+
+
 
         mPicker = (ColorPicker) rootView.findViewById(R.id.picker);
         ValueBar valueBar = (ValueBar) rootView.findViewById(R.id.valuebar);
@@ -148,8 +173,11 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     private void activateDanceMode() {
         PowerManager pm = (PowerManager)
                 getActivity().getSystemService(getActivity().getApplicationContext().POWER_SERVICE);
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DanceDance");
-        wl.acquire();
+        if (null != mWakeLock ) {
+            mWakeLock.release();
+        }
+        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DanceDance");
+        mWakeLock.acquire();
         mSensorManager.registerListener(this,mAccelerometer , SensorManager.SENSOR_DELAY_UI);
         mPicker.setClickable(false);
     }
@@ -157,8 +185,10 @@ public class LightingFragment extends Fragment implements ColorPicker.OnColorCha
     private void disableDanceMode() {
         PowerManager pm = (PowerManager)
                 getActivity().getSystemService(getActivity().getApplicationContext().POWER_SERVICE);
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DanceDance");
-        wl.release();
+        if (null != mWakeLock) {
+            mWakeLock.release();
+            mWakeLock = null;
+        }
         mSensorManager.unregisterListener(this);
         mPicker.setClickable(true);
     }

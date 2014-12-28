@@ -44,7 +44,7 @@
         <com.larswerkman.holocolorpicker.ColorPicker
             android:id="@+id/picker"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="230dp"/>
 
         <com.larswerkman.holocolorpicker.ValueBar
             android:id="@+id/valuebar"
@@ -84,6 +84,30 @@
             </TableRow>
 
         </TableLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/seeker_text"
+                android:id="@+id/textView"
+                android:layout_marginRight="20dp"
+                android:layout_marginTop="10dp"
+                android:singleLine="true" />
+
+            <SeekBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/speedSeeker"
+                android:max="100" />
+        </LinearLayout>
 
     </LinearLayout>
 </FrameLayout>

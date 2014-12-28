@@ -19,6 +19,8 @@ public class HackoJackoProtocol {
 
     public static final byte T_DIRECT = 0x01;
 
+    public static final byte T_SPEED = 0x02;
+
 
     private static final byte HEADERLEN = 0x08;
 
@@ -40,6 +42,12 @@ public class HackoJackoProtocol {
 
         byte[] header = constructHeader(T_DIRECT, 3);
         sendMsg(marshallPacket(header, colorBytes));
+    }
+
+    public static void sendSpeedCommand (byte speed) {
+        byte[] speedByte = new byte[] {speed};
+        byte[] header = constructHeader (T_SPEED, 1);
+        sendMsg(marshallPacket(header, speedByte));
     }
 
     public static void activatePreset(byte presetId) {
