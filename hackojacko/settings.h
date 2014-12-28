@@ -1,10 +1,13 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#define NUM_LEDS 20
+#define NUM_LEDS 48
 #define BRIGHTNESS 64
 
-#define DATA_PIN 10
+#define DATA_PIN 13
+
+#define MIN_PERIOD 100
+#define MAX_PERIOD 300
 
 typedef unsigned int uint;
 
@@ -17,6 +20,7 @@ typedef unsigned int uint;
   #define P_RANDOM  0x04
 
 #define T_DIRECT  0x01
+#define T_SPEED   0x02
 // MESSAGE TYPES
 
 #define NUM_BUFFERS 1
