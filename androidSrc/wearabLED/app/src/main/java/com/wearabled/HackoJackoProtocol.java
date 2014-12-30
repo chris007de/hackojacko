@@ -47,6 +47,7 @@ public class HackoJackoProtocol {
     public static void sendSpeedCommand (byte speed) {
         byte[] speedByte = new byte[] {speed};
         byte[] header = constructHeader (T_SPEED, 1);
+
         sendMsg(marshallPacket(header, speedByte));
     }
 
