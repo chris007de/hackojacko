@@ -42,6 +42,14 @@ void Hackojacko::render(void) {
   }
 }
 
+void Hackojacko::setSpeed(byte pSpeed) {
+  if(pSpeed >= 0 && pSpeed <= 100) {
+    m_period = MIN_PERIOD + (MAX_PERIOD*(pSpeed/100));
+  }
+  //Serial.print("m_period ");
+  //Serial.println(m_period);
+}
+
 void Hackojacko::setColor(CRGB pColor) {
   m_color = pColor;
   if(P_ALL_ON == m_state) {

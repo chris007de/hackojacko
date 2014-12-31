@@ -25,6 +25,8 @@ public:
 	void setColor(CRGB);
 	void setAll(CRGB);
 
+	void setSpeed(byte);
+
 	void off(void);
 	void on(void);
 	void blink(void);

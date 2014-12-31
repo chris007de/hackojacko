@@ -206,6 +206,10 @@ bool evalPacket(struct s_packet* pPacket) {
         DBG_PRINTLN(b, DEC);
         break;
 
+      case T_SPEED:
+        DBG_PRINTLN("  SPEED");
+        myHackojacko.setSpeed((byte)pPacket->msgBody[0]);
+
       default:
         return false;
         break;
